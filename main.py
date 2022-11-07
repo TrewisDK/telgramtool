@@ -34,3 +34,19 @@ async def sender(text):
                     print(e)
                     continue
 
+
+async def new_first_name(name):
+    async with Client("my_account", api_id, api_hash) as app:
+        await app.update_profile(first_name=name)
+
+
+async def new_last_name(name):
+    async with Client("my_account", api_id, api_hash) as app:
+        await app.update_profile(last_name=name)
+
+
+async def new_photo():
+    async with Client("my_account", api_id, api_hash) as app:
+        await app.set_profile_photo(photo="user_photo.jpg")
+
+
