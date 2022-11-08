@@ -12,7 +12,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
 
-from main import parser, sender, new_first_name, new_photo, new_last_name
+from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name
 
 
 class GetChanal(StatesGroup):
@@ -36,6 +36,10 @@ class NewPhoto(StatesGroup):
     get_photo = State()
 
 
+class PhotoToSend(StatesGroup):
+    get_photo = State()
+
+
 storage = MemoryStorage()
 
 bot = Bot(token=TOKEN)
@@ -44,10 +48,11 @@ dp = Dispatcher(bot, storage=storage)
 main_board = ReplyKeyboardMarkup(resize_keyboard=True)
 parse_kb = KeyboardButton("📄 Парсинг")
 sender_kb = KeyboardButton("✉ Рассылка")
+photo_to_send_kb = KeyboardButton("📷 Загрузить фото для рассылки")
 new_first_name_kb = KeyboardButton("Установить новое имя")
 new_last_name_kb = KeyboardButton("Установть новое второе имя")
 new_photo_kb = KeyboardButton("Установть новую фотографию")
-main_board.add(parse_kb, sender_kb).row(new_first_name_kb, new_last_name_kb, new_photo_kb)
+main_board.add(parse_kb, sender_kb).row(new_first_name_kb, new_last_name_kb, new_photo_kb).row(photo_to_send_kb)
 
 
 @dp.message_handler(commands=['start'])
@@ -73,6 +78,9 @@ async def echo_message(msg: types.Message):
     elif msg.text == "Установть новую фотографию":
         await bot.send_message(msg.from_user.id, "Отправьте новое фото")
         await NewPhoto.get_photo.set()
+    elif msg.text == "📷 Загрузить фото для рассылки":
+        await bot.send_message(msg.from_user.id, "Отправьте фото которое будет рассылаться вместе с текстом")
+        await PhotoToSend.get_photo.set()
 
 
 @dp.message_handler(state=GetChanal.get_chanal)
@@ -104,7 +112,7 @@ async def get_users_to_send(message: types.Message, state: FSMContext):
     text = message.text
     await state.finish()
     await bot.send_message(message.from_user.id, "Рассылка началась")
-    await sender(text)
+    await sender_with_photo(text)
     await bot.send_message(message.from_user.id, "Расслыка окончена")
 
 
@@ -126,9 +134,18 @@ async def get_new_first_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=NewPhoto.get_photo, content_types=['photo'])
 async def get_new_photo(message: types.Message, state: FSMContext):
-    await message.photo[-1].download('user_photo.jpg')
+    await message.photo[-1].download('./user_photo.jpg')
     await state.finish()
+    await new_photo()
     await bot.send_message(message.from_user.id, "Новое фото установлено")
+
+
+@dp.message_handler(state=PhotoToSend.get_photo, content_types=['photo'])
+async def get_photo_to_send(message: types.Message, state: FSMContext):
+    await message.photo[-1].download('./photo_to_send.jpg')
+    await state.finish()
+    await new_photo()
+    await bot.send_message(message.from_user.id, "Фото добавлено и будет рассылаться вместе с текстом")
 
 
 if __name__ == '__main__':

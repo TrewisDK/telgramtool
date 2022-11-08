@@ -9,6 +9,7 @@ api_hash = api_hash
 
 async def parser(chat):
     async with Client("my_account", api_id, api_hash) as app:
+        await app.join_chat(chat)
         async for member in app.get_chat_members(chat):
             member_is = member.user.username
             print(member_is)
@@ -19,7 +20,7 @@ async def parser(chat):
                 continue
 
 
-async def sender(text):
+async def sender_with_photo(text):
     async with Client("my_account", api_id, api_hash) as app:
         with open("users_to_spam.txt", "r") as f:
             users = f.readlines()
@@ -28,7 +29,7 @@ async def sender(text):
                 if limit >= 5:
                     break
                 try:
-                    await app.send_message(user, text)
+                    await app.send_photo(user, "./photo_to_send.jpg", caption=text)
                     limit += 1
                 except Exception as e:
                     print(e)
@@ -47,6 +48,4 @@ async def new_last_name(name):
 
 async def new_photo():
     async with Client("my_account", api_id, api_hash) as app:
-        await app.set_profile_photo(photo="user_photo.jpg")
-
-
+        await app.set_profile_photo(photo="./user_photo.jpg")

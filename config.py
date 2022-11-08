@@ -1,3 +1,3 @@
-api_id = 1561496
-api_hash = '967c2f9b5e20e29756ce8f80aa86669c'
+api_id = 25632243
+api_hash = '9743fe12d6cbe102d8fbfcc89bda8ede'
 TOKEN = '5766539819:AAGU6JzJ_nFD90ZcY1-Q2jPvP6wDbk5v-LU'
