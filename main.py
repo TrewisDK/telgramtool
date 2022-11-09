@@ -16,7 +16,7 @@ async def parser(chat):
             try:
                 with open(f"{chat}_members.txt", "a+") as f:
                     f.write("@" + member_is + "\n")
-            except Exception as e:
+            except Exception:
                 continue
 
 
@@ -49,3 +49,9 @@ async def new_last_name(name):
 async def new_photo():
     async with Client("my_account", api_id, api_hash) as app:
         await app.set_profile_photo(photo="./user_photo.jpg")
+
+
+async def add_user_to_chat(chat, users):
+    async with Client("my_account", api_id, api_hash) as app:
+        await app.add_chat_members(chat, users)
+

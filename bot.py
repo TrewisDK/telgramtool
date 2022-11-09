@@ -12,7 +12,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
 
-from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name
+from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name, add_user_to_chat
 
 
 class GetChanal(StatesGroup):
@@ -40,6 +40,11 @@ class PhotoToSend(StatesGroup):
     get_photo = State()
 
 
+class AddToChat(StatesGroup):
+    get_chat = State()
+    get_users = State()
+
+
 storage = MemoryStorage()
 
 bot = Bot(token=TOKEN)
@@ -52,7 +57,9 @@ photo_to_send_kb = KeyboardButton("📷 Загрузить фото для ра�
 new_first_name_kb = KeyboardButton("Установить новое имя")
 new_last_name_kb = KeyboardButton("Установть новое второе имя")
 new_photo_kb = KeyboardButton("Установть новую фотографию")
-main_board.add(parse_kb, sender_kb).row(new_first_name_kb, new_last_name_kb, new_photo_kb).row(photo_to_send_kb)
+add_user_to_chat_kb = KeyboardButton("Добавить пользователей в чат")
+main_board.add(parse_kb, sender_kb).row(new_first_name_kb, new_last_name_kb, new_photo_kb).row(photo_to_send_kb).row(
+    add_user_to_chat_kb)
 
 
 @dp.message_handler(commands=['start'])
@@ -81,6 +88,9 @@ async def echo_message(msg: types.Message):
     elif msg.text == "📷 Загрузить фото для рассылки":
         await bot.send_message(msg.from_user.id, "Отправьте фото которое будет рассылаться вместе с текстом")
         await PhotoToSend.get_photo.set()
+    elif msg.text == "Добавить пользователей в чат":
+        await bot.send_message(msg.from_user.id, "Отправьте ссылку на чат (без https://t.me/)")
+        await AddToChat.get_chat.set()
 
 
 @dp.message_handler(state=GetChanal.get_chanal)
@@ -146,6 +156,35 @@ async def get_photo_to_send(message: types.Message, state: FSMContext):
     await state.finish()
     await new_photo()
     await bot.send_message(message.from_user.id, "Фото добавлено и будет рассылаться вместе с текстом")
+
+
+@dp.message_handler(state=AddToChat.get_chat)
+async def get_chat_name(message: types.Message, state: FSMContext):
+    await state.update_data(chanal_name=message.text)
+    await bot.send_message(message.from_user.id, "Отпрьвте файл с никами")
+    await AddToChat.get_users.set()
+
+
+@dp.message_handler(state=AddToChat.get_users, content_types=['document'])
+async def get_users_to_send(message: types.Message, state: FSMContext):
+    file_info = await bot.get_file(message.document.file_id)
+    downloaded_file = await bot.download_file(file_info.file_path)
+    with open("users_to_chat.txt", 'wb') as new_file:
+        new_file.write(downloaded_file.getvalue())
+    await bot.send_message(message.from_user.id,
+                           "Отлично!\nНики пользователей получены")
+    data = await state.get_data()
+    await state.finish()
+    with open("users_to_chat.txt", "r") as f:
+        users = f.readlines()
+    for user in users:
+        try:
+            await add_user_to_chat(data["chanal_name"], user)
+        except Exception:
+            await bot.send_message(message.from_user.id, "Перепроверьте данные переданые боту")
+            continue
+
+    await bot.send_message(message.from_user.id, "Работа окончена")
 
 
 if __name__ == '__main__':
