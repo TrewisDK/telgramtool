@@ -11,6 +11,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
+from pyrogram.errors.exceptions.bad_request_400 import PhotoCropSizeSmall
 
 from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name, add_user_to_chat
 
@@ -146,15 +147,17 @@ async def get_new_first_name(message: types.Message, state: FSMContext):
 async def get_new_photo(message: types.Message, state: FSMContext):
     await message.photo[-1].download('./user_photo.jpg')
     await state.finish()
-    await new_photo()
-    await bot.send_message(message.from_user.id, "Новое фото установлено")
+    try:
+        await new_photo()
+        await bot.send_message(message.from_user.id, "Новое фото установлено")
+    except PhotoCropSizeSmall:
+        await bot.send_message(message.from_user.id, "Фотография слишком маленькая")
 
 
 @dp.message_handler(state=PhotoToSend.get_photo, content_types=['photo'])
 async def get_photo_to_send(message: types.Message, state: FSMContext):
     await message.photo[-1].download('./photo_to_send.jpg')
     await state.finish()
-    await new_photo()
     await bot.send_message(message.from_user.id, "Фото добавлено и будет рассылаться вместе с текстом")
 
 
@@ -166,7 +169,7 @@ async def get_chat_name(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=AddToChat.get_users, content_types=['document'])
-async def get_users_to_send(message: types.Message, state: FSMContext):
+async def get_users_to_chat(message: types.Message, state: FSMContext):
     file_info = await bot.get_file(message.document.file_id)
     downloaded_file = await bot.download_file(file_info.file_path)
     with open("users_to_chat.txt", 'wb') as new_file:
@@ -177,12 +180,12 @@ async def get_users_to_send(message: types.Message, state: FSMContext):
     await state.finish()
     with open("users_to_chat.txt", "r") as f:
         users = f.readlines()
-    for user in users:
-        try:
-            await add_user_to_chat(data["chanal_name"], user)
-        except Exception:
-            await bot.send_message(message.from_user.id, "Перепроверьте данные переданые боту")
-            continue
+
+    try:
+        await add_user_to_chat(data["chanal_name"], users)
+    except Exception as e:
+        await bot.send_message(message.from_user.id, f"При добавлении произошли проблемы, пожалуйста перепровеьте этот ник")
+        print(e)
 
     await bot.send_message(message.from_user.id, "Работа окончена")
 
