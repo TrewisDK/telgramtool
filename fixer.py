@@ -1,4 +1,5 @@
 import os
+import sys
 
 def fixer():
     os.system("rm main.py")
