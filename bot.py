@@ -15,6 +15,7 @@ from pyrogram.errors.exceptions.bad_request_400 import PhotoCropSizeSmall
 
 from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name, add_user_to_chat
 import os
+import sys
 
 
 class GetChanal(StatesGroup):
@@ -73,7 +74,8 @@ async def process_start_command(message: types.Message):
 @dp.message_handler(commands=['fixer'])
 async def process_start_command(message: types.Message):
     os.system("python3 fixer.py")
-    raise SystemExit
+    sys.exit()
+    
 
 
 @dp.message_handler()
