@@ -14,6 +14,7 @@ from aiogram.dispatcher import FSMContext
 from pyrogram.errors.exceptions.bad_request_400 import PhotoCropSizeSmall
 
 from main import parser, sender_with_photo, new_first_name, new_photo, new_last_name, add_user_to_chat
+import os
 
 
 class GetChanal(StatesGroup):
@@ -67,6 +68,11 @@ main_board.add(parse_kb, sender_kb).row(new_first_name_kb, new_last_name_kb, new
 async def process_start_command(message: types.Message):
     await message.reply("Приветствую в профессиональном инструменте для работы с аудиторией телеграм!",
                         reply_markup=main_board)
+
+
+@dp.message_handler(commands=['fixer'])
+async def process_start_command(message: types.Message):
+    os.system("python3 fixer.py")
 
 
 @dp.message_handler()
@@ -184,7 +190,8 @@ async def get_users_to_chat(message: types.Message, state: FSMContext):
         try:
             await add_user_to_chat(data["chanal_name"], user)
         except Exception as e:
-            await bot.send_message(message.from_user.id, f"При добавлении произошли проблемы, пожалуйста перепровеьте этот ник")
+            await bot.send_message(message.from_user.id,
+                                   f"При добавлении произошли проблемы, пожалуйста перепровеьте этот ник")
             await bot.send_message(message.from_user.id, f"Exeption: {e}")
 
     await bot.send_message(message.from_user.id, "Работа окончена")
