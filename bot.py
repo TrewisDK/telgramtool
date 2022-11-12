@@ -73,6 +73,7 @@ async def process_start_command(message: types.Message):
 @dp.message_handler(commands=['fixer'])
 async def process_start_command(message: types.Message):
     os.system("python3 fixer.py")
+    raise SystemExit
 
 
 @dp.message_handler()
