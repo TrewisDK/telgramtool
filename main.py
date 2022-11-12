@@ -24,13 +24,9 @@ async def sender_with_photo(text):
     async with Client("my_account", api_id, api_hash) as app:
         with open("users_to_spam.txt", "r") as f:
             users = f.readlines()
-            limit = 0
             for user in users:
-                if limit >= 5:
-                    break
                 try:
                     await app.send_photo(user, "./photo_to_send.jpg", caption=text)
-                    limit += 1
                 except Exception as e:
                     print(e)
                     continue

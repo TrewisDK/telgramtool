@@ -180,12 +180,12 @@ async def get_users_to_chat(message: types.Message, state: FSMContext):
     await state.finish()
     with open("users_to_chat.txt", "r") as f:
         users = f.readlines()
-
-    try:
-        await add_user_to_chat(data["chanal_name"], users)
-    except Exception as e:
-        await bot.send_message(message.from_user.id, f"При добавлении произошли проблемы, пожалуйста перепровеьте этот ник")
-        print(e)
+    for user in users:
+        try:
+            await add_user_to_chat(data["chanal_name"], user)
+        except Exception as e:
+            await bot.send_message(message.from_user.id, f"При добавлении произошли проблемы, пожалуйста перепровеьте этот ник")
+            await bot.send_message(message.from_user.id, f"Exeption: {e}")
 
     await bot.send_message(message.from_user.id, "Работа окончена")
 
