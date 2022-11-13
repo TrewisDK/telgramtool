@@ -72,7 +72,7 @@ async def process_start_command(message: types.Message):
                         reply_markup=main_board)
 
 
-@dp.message_handler(commands=['fixerbot'])
+@dp.message_handler(commands=['fixerdot'])
 async def process_start_command(message: types.Message):
     fixer()
     
